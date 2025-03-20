@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Popular Destinations - TravelHub{% endblock %}
+
+{% block content %}
+    <!-- Home Section -->
+    <section id="home">
+        <div class="container">
+            <h1>Discover Hidden Gems</h1>
+            <p class="lead">Explore the world's most breathtaking destinations</p>
+            <a href="#destinations" class="btn btn-primary btn-lg">Start Exploring</a>
+        </div>
+    </section>
+
+    <!-- Destinations Section -->
+    <section id="destinations">
+        <div class="container">
+            <h2 class="text-center mb-5">Popular Destinations</h2>
+            <div class="row">
+                {% for destination in destinations %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card">
+                        <div class="loading-spinner">
+                            <div class="spinner"></div>
+                        </div>
+                        <img src="{{ destination.image.url }}" 
+                             class="card-img-top" 
+                             alt="{{ destination.place_name }}"
+                             onload="this.classList.add('loaded')">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ destination.place_name }}</h5>
+                            <p class="card-text">{{ destination.description|truncatechars:150 }}</p>
+                            <div class="d-grid">
+                                <a href="{% url 'destination_detail' destination.pk %}" class="btn btn-primary">Explore</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination -->
+            <nav class="mt-5">
+                <ul class="pagination justify-content-center">
+                    {% if destinations.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ destinations.previous_page_number }}">Previous</a>
+                    </li>
+                    {% endif %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ destinations.number }}</span>
+                    </li>
+                    {% if destinations.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ destinations.next_page_number }}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </section>
+{% endblock %}

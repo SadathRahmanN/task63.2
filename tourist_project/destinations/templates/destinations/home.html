@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Discover Hidden Gems - TravelHub{% endblock %}
+
+{% block content %}
+<section id="home" class="hero-section">
+    <div class="container">
+        <h1>Discover Hidden Gems</h1>
+        <p class="lead">Explore the world's most breathtaking destinations</p>
+        <a href="{% url 'destination_list' %}" class="btn btn-primary btn-lg">Start Exploring</a>
+    </div>
+</section>
+
+<section id="destinations" class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Featured Destinations</h2>
+        <div class="row">
+            {% for destination in featured_destinations %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                {% include 'destinations/_destination_card.html' %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

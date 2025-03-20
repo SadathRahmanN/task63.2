@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Explore Destinations - TravelHub{% endblock %}
+
+{% block content %}
+<section class="destination-list py-5">
+    <div class="container">
+        <!-- Header Section with Search and Actions -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5">
+            <div class="mb-3 mb-md-0">
+                <h1 class="display-5 fw-bold">Explore Destinations</h1>
+                <p class="lead text-muted">{{ page_obj.paginator.count }} amazing places to discover</p>
+            </div>
+            <div>
+                <a href="{% url 'destination_create' %}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-plus-circle me-2"></i>Add Destination
+                </a>
+            </div>
+        </div>
+
+        <!-- Search and Filter Section -->
+        <div class="card shadow-sm mb-5">
+            <div class="card-body">
+                <div class="row g-3">
+                    <!-- Search Input -->
+                    <div class="col-md-6">
+                        <form method="GET" hx-get="{% url 'destination_list' %}" hx-target="#destination-list" 
+                              hx-trigger="keyup changed delay:500ms, search" hx-indicator="#search-indicator">
+                            <div class="input-group">
+                                <input type="text" name="q" value="{{ request.GET.q }}" 
+                                       class="form-control form-control-lg" 
+                                       placeholder="Search destinations..." 
+                                       aria-label="Search destinations">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Sort and Filter Controls -->
+                    <div class="col-md-6">
+                        <div class="d-flex gap-2 justify-content-end">
+                            <div class="dropdown">
+                                <button class="btn btn-outline-secondary btn-lg dropdown-toggle" 
+                                        type="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-sort-down"></i> Sort By
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="?sort=created_at">Newest</a></li>
+                                    <li><a class="dropdown-item" href="?sort=-created_at">Oldest</a></li>
+                                    <li><a class="dropdown-item" href="?sort=place_name">A-Z</a></li>
+                                    <li><a class="dropdown-item" href="?sort=-place_name">Z-A</a></li>
+                                </ul>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-outline-secondary btn-lg dropdown-toggle" 
+                                        type="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-filter"></i> Filters
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="?">All Destinations</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><h6 class="dropdown-header">By State</h6></li>
+                                    {% for state in states %}
+                                    <li><a class="dropdown-item" href="?state={{ state }}">{{ state }}</a></li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="search-indicator" class="htmx-indicator text-center mb-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+        <!-- Destination Grid -->
+        <div id="destination-list" class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+            {% for destination in destinations %}
+            <div class="col">
+                <div class="card h-100 shadow-sm position-relative">
+                    <!-- Favorite Badge -->
+                    {% if user.is_authenticated %}
+                    <div class="position-absolute top-0 end-0 m-2">
+                        <form method="post" action="{% url 'toggle_favorite' destination.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm {% if destination in user.favorite_destinations.all %}btn-warning{% else %}btn-light{% endif %}">
+                                <i class="bi bi-heart{% if destination in user.favorite_destinations.all %}-fill{% endif %}"></i>
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+
+                    <!-- Destination Image -->
+                    <img src="{{ destination.image.url }}" 
+                         class="card-img-top destination-thumbnail" 
+                         alt="{{ destination.place_name }}"
+                         loading="lazy">
+
+                    <!-- Card Body -->
+                    <div class="card-body">
+                        <h3 class="h5 card-title">{{ destination.place_name }}</h3>
+                        <div class="d-flex gap-2 mb-3">
+                            <span class="badge bg-primary">
+                                <i class="bi bi-geo-alt me-1"></i>{{ destination.state }}
+                            </span>
+                            <span class="badge bg-secondary">
+                                <i class="bi bi-cloud-sun me-1"></i>{{ destination.weather }}
+                            </span>
+                        </div>
+                        <p class="card-text text-muted">{{ destination.description|truncatechars:120 }}</p>
+                    </div>
+
+                    <!-- Card Footer -->
+                    <div class="card-footer bg-transparent">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{{ destination.google_map_link }}" 
+                               class="btn btn-sm btn-outline-primary" 
+                               target="_blank">
+                                <i class="bi bi-map me-1"></i>View Map
+                            </a>
+                            <div class="text-muted small">
+                                <i class="bi bi-clock-history me-1"></i>
+                                {{ destination.created_at|timesince }} ago
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info text-center py-5">
+                    <h4 class="alert-heading">No destinations found</h4>
+                    <p>Try adjusting your search filters or create a new destination.</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <nav class="mt-5" aria-label="Pagination">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .destination-thumbnail {
+        height: 250px;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+    
+    .card:hover .destination-thumbnail {
+        transform: scale(1.03);
+    }
+    
+    .htmx-indicator {
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+    
+    .htmx-request .htmx-indicator {
+        opacity: 1;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize dropdown tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+})
+</script>
+{% endblock %}
