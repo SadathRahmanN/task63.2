@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import dj_database_url  # Make sure you install this: pip install dj-database-url
 
 # Base Directory
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -10,7 +11,7 @@ DEBUG = True
 
 # Allowed Hosts
 ALLOWED_HOSTS = [
-    '*'
+    '*',
     'localhost',
     '127.0.0.1',
     '8000-idx-task631-1739252849687.cluster-qpa6grkipzc64wfjrbr3hsdma2.cloudworkstations.dev',
@@ -26,7 +27,6 @@ CSRF_TRUSTED_ORIGINS = [
 
 # Application Definition
 INSTALLED_APPS = [
-    # Django Core Apps
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'crispy_bootstrap5',
     'rest_framework',
-    'rest_framework.authtoken',  # For token authentication
+    'rest_framework.authtoken',
 
     # Local apps
     'destinations',
@@ -69,7 +69,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'destinations.context_processors.site_stats',  # Custom context processor
+                'destinations.context_processors.site_stats',
             ],
             'builtins': [
                 'crispy_forms.templatetags.crispy_forms_tags',
@@ -81,16 +81,12 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'tourist_project.wsgi.application'
 
-# Database Configuration
+# Database Configuration (Neon PostgreSQL)
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'tourist_project',
-        'USER': 'tourist_project_user',
-        'PASSWORD': 'uJs8nd24eJwIZE27Ka9gXpiUtwbgsffV',
-        'HOST': 'dpg-cuq1o6lds78s7397negg-a.oregon-postgres.render.com',
-        'PORT': '5432',
-    }
+    'default': dj_database_url.parse(
+        'postgresql://neondb_owner:npg_kYOHUE7NLpr0@ep-billowing-lake-a5lwicn3-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require',
+        conn_max_age=600
+    )
 }
 
 # Password Validation
@@ -154,7 +150,7 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
     SECURE_SSL_REDIRECT = True
-    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_SECONDS = 31536000
 else:
     SECURE_HSTS_SECONDS = 3600
 
@@ -164,7 +160,7 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 X_FRAME_OPTIONS = 'DENY'
 
-# Email Configuration (for production)
+# Email Configuration
 if not DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_HOST = os.environ.get('EMAIL_HOST')
