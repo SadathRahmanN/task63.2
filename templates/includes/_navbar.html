@@ -1,0 +1,51 @@
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'destination_list' %}">🌍 TravelHub</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="#home">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" 
+                       href="{% if user.is_authenticated %}{% url 'destination_list' %}{% else %}{% url 'home' %}#destinations{% endif %}"
+                       {% if not user.is_authenticated %}onclick="handleDestinationsClick(event)"{% endif %}>
+                        Destinations
+                    </a>
+                </li>
+                {% if user.is_authenticated %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'destination_create' %}">Add Destination</a>
+                </li>
+                {% endif %}
+            </ul>
+            <form class="d-flex ms-3" method="GET" action="{% url 'destination_list' %}">
+                <input class="form-control me-2" type="search" name="q" placeholder="Search..." aria-label="Search">
+                <button class="btn btn-outline-light" type="submit">Search</button>
+            </form>
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <button class="btn btn-link nav-link" onclick="toggleDarkMode()" aria-label="Toggle dark mode">🌓</button>
+                </li>
+                {% if user.is_authenticated %}
+                <li class="nav-item">
+                    <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="nav-link btn btn-link" aria-label="Logout">Logout</button>
+                    </form>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="toggleOffcanvas('login-offcanvas')" aria-label="Login">Login</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="toggleOffcanvas('signup-offcanvas')" aria-label="Sign Up">Sign Up</a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>

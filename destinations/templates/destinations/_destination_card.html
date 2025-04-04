@@ -1,0 +1,17 @@
+<div class="card destination-card">
+    <div class="loading-spinner">
+        <div class="spinner"></div>
+    </div>
+    <img src="{{ destination.image.url }}" 
+         class="card-img-top" 
+         alt="{{ destination.place_name }}"
+         onload="this.classList.add('loaded')">
+    <div class="card-body">
+        <h5 class="card-title">{{ destination.place_name }}</h5>
+        <p class="card-text">{{ destination.description|truncatechars:150 }}</p>
+        <div class="d-grid">
+            <a href="{% url 'destination_detail' destination.pk %}" 
+               class="btn btn-primary">Explore</a>
+        </div>
+    </div>
+</div>
