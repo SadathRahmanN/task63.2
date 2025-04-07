@@ -15,6 +15,7 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     '8000-idx-task631-1739252849687.cluster-qpa6grkipzc64wfjrbr3hsdma2.cloudworkstations.dev',
+    'https://task63.onrender.com',
 ]
 
 # CSRF Trusted Origins
@@ -46,6 +47,7 @@ INSTALLED_APPS = [
 
 # Middleware
 MIDDLEWARE = [
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

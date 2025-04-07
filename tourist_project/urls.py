@@ -1,9 +1,9 @@
-""
 """
 URL configuration for mysite project.
 
-The `urlpatterns` list routes URLs to views. For more information please see:
+The `urlpatterns` list routes URLs to views. For more information see:
     https://docs.djangoproject.com/en/5.0/topics/http/urls/
+
 Examples:
 Function views
     1. Add an import:  from my_app import views
@@ -21,18 +21,19 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
-# Import for token-based authentication
+# Token-based authentication view
 from rest_framework.authtoken.views import obtain_auth_token
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    # Include app-level URLs
     path('', include('destinations.urls')),
 
-    # Token Authentication Endpoint
+    # DRF token authentication endpoint
     path('api/token/', obtain_auth_token, name='api_token_auth'),
 ]
 
-# Serve media files during development
+# Serve media files in development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-""
