@@ -1,12 +1,30 @@
+<!-- _modals.html -->
 <!-- Login Modal -->
 <div id="login-offcanvas" class="offcanvas-right">
     <div class="offcanvas-content">
         <h3>Welcome Back!</h3>
-        <form method="POST" action="{% url 'login' %}">
+        {% if messages %}
+            <div class="alert alert-danger">
+                {% for message in messages %}
+                    {% if 'login' in message.tags %}
+                    <p>{{ message }}</p>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endif %}
+        <form method="POST" action="{% url 'login' %}" id="login-form">
             {% csrf_token %}
-            <input type="text" name="username" class="form-control" placeholder="Username" required>
-            <input type="password" name="password" class="form-control" placeholder="Password" required>
-            <button type="submit" class="btn btn-primary mt-3">Login</button>
+            <input type="hidden" name="next" value="{{ request.GET.next }}">
+            
+            <div class="mb-3">
+                <input type="text" name="username" class="form-control" 
+                       placeholder="Username" required autofocus>
+            </div>
+            <div class="mb-3">
+                <input type="password" name="password" class="form-control" 
+                       placeholder="Password" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Login</button>
         </form>
     </div>
 </div>
@@ -15,12 +33,60 @@
 <div id="signup-offcanvas" class="offcanvas-right">
     <div class="offcanvas-content">
         <h3>Join TravelHub</h3>
-        <form method="POST" action="{% url 'signup' %}">
+        {% if signup_errors %}
+            <div class="alert alert-danger">
+                {% for field, errors in signup_errors.items %}
+                    {% for error in errors %}
+                        <p>{{ error.message }}</p>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+        {% endif %}
+        <form method="POST" action="{% url 'signup' %}" id="signup-form">
             {% csrf_token %}
-            <input type="text" name="username" class="form-control" placeholder="Username" required>
-            <input type="password" name="password1" class="form-control" placeholder="Password" required>
-            <input type="password" name="password2" class="form-control" placeholder="Confirm Password" required>
-            <button type="submit" class="btn btn-primary mt-3">Sign Up</button>
+            <div class="mb-3">
+                <input type="text" name="username" class="form-control" 
+                       placeholder="Username" required
+                       value="{{ signup_form_data.username|default:'' }}">
+            </div>
+            <div class="mb-3">
+                <input type="email" name="email" class="form-control" 
+                       placeholder="Email" required
+                       value="{{ signup_form_data.email|default:'' }}">
+            </div>
+            <div class="mb-3">
+                <input type="password" name="password1" class="form-control" 
+                       placeholder="Password" required>
+            </div>
+            <div class="mb-3">
+                <input type="password" name="password2" class="form-control" 
+                       placeholder="Confirm Password" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Sign Up</button>
         </form>
     </div>
 </div>
+
+<!-- CSRF Protection JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle CSRF for modals
+    function refreshCSRFToken() {
+        fetch('/refresh-csrf/')
+            .then(response => response.json())
+            .then(data => {
+                document.querySelectorAll('input[name="csrfmiddlewaretoken"]').forEach(input => {
+                    input.value = data.csrfToken;
+                });
+            });
+    }
+
+    // Refresh CSRF token when modals open
+    document.querySelectorAll('[data-bs-toggle="offcanvas"]').forEach(button => {
+        button.addEventListener('click', refreshCSRFToken);
+    });
+
+    // Auto-refresh token every 5 minutes
+    setInterval(refreshCSRFToken, 300000);
+});
+</script>

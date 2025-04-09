@@ -1,5 +1,5 @@
 from django.views.generic import View, ListView, DetailView, CreateView, UpdateView, DeleteView
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib.auth import authenticate, login, logout
@@ -8,6 +8,7 @@ from django.contrib import messages
 from django.db.models import Q
 from django.contrib.auth.models import User
 from .models import Destination
+from .forms import CustomSignupForm, DestinationForm  # Import custom forms
 from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.decorators import method_decorator
 
@@ -22,7 +23,12 @@ class HomeView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['recent_destinations'] = Destination.recent_destinations()[:3]
+        context.update({
+            'recent_destinations': Destination.recent_destinations()[:3],
+            'show_signup': self.request.GET.get('show_signup') == 'true',
+            'signup_errors': self.request.session.pop('signup_errors', None),
+            'signup_form_data': self.request.session.pop('signup_form_data', None)
+        })
         return context
 
 class DestinationListView(ListView):
@@ -67,19 +73,19 @@ class DestinationDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['similar_destinations'] = Destination.objects.filter(
-            state=self.object.state
-        ).exclude(pk=self.object.pk)[:4]
-        
-        if self.request.user.is_authenticated:
-            context['is_favorite'] = self.object.favorited_by.filter(
+        context.update({
+            'similar_destinations': Destination.objects.filter(
+                state=self.object.state
+            ).exclude(pk=self.object.pk)[:4],
+            'is_favorite': self.object.favorited_by.filter(
                 pk=self.request.user.pk
-            ).exists()
+            ).exists() if self.request.user.is_authenticated else False
+        })
         return context
 
 # Authentication Views
-def login_view(request):
-    if request.method == 'POST':
+class LoginView(View):
+    def post(self, request):
         username = request.POST.get('username')
         password = request.POST.get('password')
         user = authenticate(request, username=username, password=password)
@@ -91,29 +97,37 @@ def login_view(request):
             
         messages.error(request, 'Invalid username or password')
         return redirect('home')
-        
-    return redirect('home')
 
-def signup_view(request):
-    if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+    def get(self, request):
+        return redirect('home')
+
+class SignupView(View):
+    def post(self, request):
+        form = CustomSignupForm(request.POST)
         if form.is_valid():
             user = form.save()
+            user.email = form.cleaned_data['email']
+            user.save()
             login(request, user)
             messages.success(request, 'Account created successfully!')
             return redirect('dashboard')
         
-        # Store form errors in session for retrieval
         request.session['signup_errors'] = form.errors.get_json_data()
         request.session['signup_form_data'] = request.POST
         return redirect(f"{reverse('home')}?show_signup=true")
-    
-    return redirect('home')
 
-def logout_view(request):
-    logout(request)
-    messages.success(request, 'You have been logged out')
-    return redirect('home')
+    def get(self, request):
+        return redirect('home')
+
+class LogoutView(View):
+    def post(self, request):  # Changed from get() to post()
+        logout(request)
+        messages.success(request, 'You have been logged out')
+        return redirect('home')
+    
+    # Optional: Handle GET requests too for direct links
+    def get(self, request):
+        return self.post(request)
 
 # User Dashboard Views
 class DashboardView(LoginRequiredMixin, ListView):
@@ -127,7 +141,6 @@ class DashboardView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
-        
         context.update({
             'favorite_destinations': user.favorite_destinations.select_related('created_by'),
             'stats': {
@@ -139,11 +152,9 @@ class DashboardView(LoginRequiredMixin, ListView):
         return context
 
 class DestinationCreateView(LoginRequiredMixin, CreateView):
-    model = Destination
-    fields = ['place_name', 'description', 'weather', 'state', 'district', 
-              'google_map_link', 'image', 'is_featured']
+    form_class = DestinationForm
     template_name = 'destinations/create.html'
-    success_url = reverse_lazy('destination_list')
+    success_url = reverse_lazy('dashboard')
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user
@@ -156,8 +167,7 @@ class DestinationCreateView(LoginRequiredMixin, CreateView):
 
 class DestinationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Destination
-    fields = ['place_name', 'description', 'weather', 'state', 'district',
-              'google_map_link', 'image', 'is_featured']
+    form_class = DestinationForm
     template_name = 'destinations/update.html'
     success_url = reverse_lazy('dashboard')
 

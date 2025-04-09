@@ -1,51 +1,122 @@
 <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
     <div class="container">
-        <a class="navbar-brand" href="{% url 'destination_list' %}">🌍 TravelHub</a>
+        <a class="navbar-brand" href="{% url 'home' %}">🌍 TravelHub</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
+            <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="#home">Home</a>
+                    <a class="nav-link" href="{% url 'home' %}#home">Home</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" 
-                       href="{% if user.is_authenticated %}{% url 'destination_list' %}{% else %}{% url 'home' %}#destinations{% endif %}"
-                       {% if not user.is_authenticated %}onclick="handleDestinationsClick(event)"{% endif %}>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         Destinations
                     </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{% url 'destination_list' %}">All Destinations</a></li>
+                        {% if user.is_authenticated %}
+                        <li><a class="dropdown-item" href="{% url 'dashboard' %}">My Destinations</a></li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'destination_list' %}?sort=-created_at">Newest</a></li>
+                        <li><a class="dropdown-item" href="{% url 'destination_list' %}?sort=place_name">A-Z</a></li>
+                    </ul>
                 </li>
                 {% if user.is_authenticated %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'destination_create' %}">Add Destination</a>
+                    <a class="nav-link" href="{% url 'destination_create' %}">Add New</a>
                 </li>
                 {% endif %}
             </ul>
-            <form class="d-flex ms-3" method="GET" action="{% url 'destination_list' %}">
-                <input class="form-control me-2" type="search" name="q" placeholder="Search..." aria-label="Search">
-                <button class="btn btn-outline-light" type="submit">Search</button>
-            </form>
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <button class="btn btn-link nav-link" onclick="toggleDarkMode()" aria-label="Toggle dark mode">🌓</button>
-                </li>
-                {% if user.is_authenticated %}
-                <li class="nav-item">
-                    <form method="post" action="{% url 'logout' %}" style="display: inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="nav-link btn btn-link" aria-label="Logout">Logout</button>
-                    </form>
-                </li>
-                {% else %}
-                <li class="nav-item">
-                    <a class="nav-link" href="#" onclick="toggleOffcanvas('login-offcanvas')" aria-label="Login">Login</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#" onclick="toggleOffcanvas('signup-offcanvas')" aria-label="Sign Up">Sign Up</a>
-                </li>
-                {% endif %}
-            </ul>
+            
+            <div class="d-flex align-items-center">
+                <form class="d-flex me-3" method="GET" action="{% url 'destination_list' %}">
+                    <div class="input-group">
+                        <input type="search" class="form-control" name="q" placeholder="Search destinations..." aria-label="Search">
+                        <button class="btn btn-outline-light" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <ul class="navbar-nav">
+                    <li class="nav-item me-2">
+                        <button class="btn btn-link nav-link" onclick="toggleDarkMode()" aria-label="Toggle dark mode">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                    </li>
+                    
+                    {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i> {{ user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{% url 'dashboard' %}">
+                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'dashboard' %}#favorites">
+                                <i class="fas fa-heart me-2"></i>Favorites
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="post" action="{% url 'logout' %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="toggleOffcanvas('login-offcanvas')">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="toggleOffcanvas('signup-offcanvas')">
+                            <i class="fas fa-user-plus"></i> Sign Up
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
         </div>
     </div>
 </nav>
+
+<!-- Mobile Menu Fallback -->
+<div class="mobile-menu-fallback d-lg-none">
+    {% if user.is_authenticated %}
+    <div class="d-grid gap-2 p-3">
+        <a href="{% url 'destination_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus-circle"></i> Add Destination
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// Logout confirmation
+document.querySelectorAll('form[action="{% url 'logout' %}"]').forEach(form => {
+    form.addEventListener('submit', (e) => {
+        if (!confirm('Are you sure you want to logout?')) {
+            e.preventDefault();
+        }
+    });
+});
+
+// Dark mode toggle
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+}
+
+// Initialize dark mode
+if (localStorage.getItem('darkMode') === 'true') {
+    document.body.classList.add('dark-mode');
+}
+</script>
