@@ -1,16 +1,17 @@
+# destinations/urls.py
 from django.urls import path, include
 from .views import (
     HomeView,
     DestinationListView,
     DestinationDetailView,
+    LoginView,
+    SignupView,
+    LogoutView,
     DashboardView,
     DestinationCreateView,
     DestinationUpdateView,
     DestinationDeleteView,
     ToggleFavoriteView,
-    login_view,
-    signup_view,
-    logout_view,
     AdminDashboardView
 )
 
@@ -21,10 +22,10 @@ urlpatterns = [
     path('destinations/<int:pk>/', DestinationDetailView.as_view(), name='destination_detail'),
     path('api/v1/', include('destinations.api.urls')),
 
-    # Authentication
-    path('login/', login_view, name='login'),
-    path('signup/', signup_view, name='signup'),
-    path('logout/', logout_view, name='logout'),
+    # Authentication (updated to class-based views)
+    path('login/', LoginView.as_view(), name='login'),
+    path('signup/', SignupView.as_view(), name='signup'),
+    path('logout/', LogoutView.as_view(), name='logout'),
 
     # User dashboard
     path('dashboard/', DashboardView.as_view(), name='dashboard'),
